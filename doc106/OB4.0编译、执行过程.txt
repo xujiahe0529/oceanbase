@@ -1,0 +1,53 @@
+构建一docker镜像
+docker run -itd --name basic -d centos:7
+安装常用工具 net-tools, vim, openssh-server, iproute, zip, unzip
+安装编译工具 yum install git wget rpm* cpio make glibc-devel glibc-headers binutils
+
+下载gcc
+yum install -y gcc gcc-c++ make automake
+下载cmake
+https://cmake.org/download/
+软链接绑定
+ln -s /usr/etc/cmake-3.25.0-linux-x86_64/bin/cmake /usr/bin/cmake
+
+将OB源代码cp过去
+mkdir ob
+docker cp oceanbase-master.zip basic:/ob
+unzip oceanbase-master.zip
+bash build.sh debug --init --make
+等待编译成功
+
+sh build.sh debug
+进入生成的debug构建目录
+cd build_debug
+进行构建
+make -j observer
+查看构建产物
+stat src/observer/observer
+
+替换observer
+cp /ob/oceanbase-master/build_debug/src/observer/observer /root/.obd/repository/oceanbase-ce/4.0.0.0/42611dc51ca9bb28f36e60e4406ceea4a74914c7/bin/observer
+通过obd进行部署
+obd cluster deploy obcluster -c /tmp/single-with-obproxy.yaml
+obd cluster start obcluster
+部署后使用obclient连接数据库使用
+
+
+下载版本一致的VSCode Server linux_x86_64
+https://update.code.visualstudio.com/commit:8fa188b2b301d36553cbc9ce1b0a146ccb93351f/server-linux-x64/stable
+根据版本创建相应文件夹
+mkdir /root/.vscode-server/bin/8fa188b2b301d36553cbc9ce1b0a146ccb93351f
+将VSCode解压至该文件夹下
+cp -r vscode-server-linux-x64/* /root/.vscode-server/bin/8fa188b2b301d36553cbc9ce1b0a146ccb93351f
+
+提交镜像
+docker commit basic ob:basic_v0.1
+保存镜像
+docker save ob:basic_v0.1 -o basic_v0.1.tar.gz
+导入镜像
+docker load basic_v0.1.tar.gz
+
+docker run -d -p 3022:22 --name ob4.0 -m 64G --privileged=true ob:basic_v0.11 /sbin/init "while true;do echo hello world;sleep 10;done"
+
+通过VSCode连接Container
+出现remote host identification错误或“试图写入的管道不存在”时，删除.ssh/known_hosts
