@@ -333,3 +333,12 @@ deps/3rd
 ############# test #############
 test/tmp
 test/var
+
+############# build bin or ide config #############
+.vscode/
+.idea/
+debug/
+build_debug/
+build_release/
+build_rpm/
+dist/
