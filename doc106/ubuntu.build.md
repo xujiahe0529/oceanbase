@@ -2,5 +2,5 @@
 
 install requirements on ubuntu:
 ```
-sudo apt-get install git wget rpm rpm2cpio cpio make build-essential libncurses5 binutils bison flex
+sudo apt-get install git wget rpm rpm2cpio cpio make build-essential libncurses5 binutils bison flex libaio-dev
 ```
