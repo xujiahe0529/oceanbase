@@ -339,6 +339,8 @@
 #include "sql/engine/expr/ob_expr_scn_to_timestamp.h"
 #include "sql/engine/expr/ob_expr_errno.h"
 
+#include "sql/engine/expr/ob_expr_python_udf.h"
+
 using namespace oceanbase::common;
 namespace oceanbase
 {
@@ -853,6 +855,7 @@ void ObExprOperatorFactory::register_expr_operators()
 #if  defined(ENABLE_DEBUG_LOG) || !defined(NDEBUG)
     // convert input value into an OceanBase error number and throw out as exception
     REG_OP(ObExprErrno);
+    REG_OP(ObExprPythonUdf);
 #endif
   }();
     REG_OP(ObExprDayName);

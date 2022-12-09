@@ -15,6 +15,13 @@ target_compile_definitions(ob_base INTERFACE
 target_compile_options(ob_base INTERFACE
   $<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>)
 
+add_library(python_lib INTERFACE)
+target_include_directories(
+  python_lib INTERFACE
+  "/usr/local/include/python3.6m")
+target_link_libraries(python_lib INTERFACE
+    -L/usr/local/lib -lpython3.6m -lpthread -ldl  -lutil -lm  -Xlinker -export-dynamic)
+
 function(ob_server_add_target target)
   message(STATUS "observer_add_target ${target}")
   ob_add_object_target(${target})

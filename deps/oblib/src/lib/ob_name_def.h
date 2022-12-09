@@ -974,4 +974,6 @@
 #define N_JSON_PRETTY                       "json_pretty"
 #define N_JSON_MEMBER_OF                    "json_member_of"
 
+#define N_PYTHON_UDF                        "python_udf"
+
 #endif //OCEANBASE_LIB_OB_NAME_DEF_H_

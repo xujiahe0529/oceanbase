@@ -264,6 +264,7 @@
 #include "ob_expr_sha.h"
 #include "ob_expr_compress.h"
 #include "ob_expr_statement_digest.h"
+#include "ob_expr_python_udf.h"
 
 namespace oceanbase
 {
@@ -862,7 +863,8 @@ static ObExpr::EvalFunc g_expr_eval_functions[] = {
   NULL,                                                               /* 509 */
 #endif
   ObExprDayName::calc_dayname,                                        /* 510 */
-  ObExprNullif::eval_nullif_enumset                                   /* 511 */
+  ObExprNullif::eval_nullif_enumset,                                  /* 511 */
+  ObExprPythonUdf::eval_python_udf
 
 };
 
