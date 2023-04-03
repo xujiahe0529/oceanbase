@@ -18,9 +18,10 @@ target_compile_options(ob_base INTERFACE
 add_library(python_lib INTERFACE)
 target_include_directories(
   python_lib INTERFACE
-  "/usr/local/include/python3.6m")
+  "/usr/local/include/python3.11m"
+  "/usr/local/python311/lib/python3.11/site-packages/numpy/core/include/")
 target_link_libraries(python_lib INTERFACE
-    -L/usr/local/lib -lpython3.6m -lpthread -ldl  -lutil -lm  -Xlinker -export-dynamic)
+  -L/usr/local/python311/lib -lpython3.11m -lpthread -ldl  -lutil -lm  -Xlinker -export-dynamic)
 
 function(ob_server_add_target target)
   message(STATUS "observer_add_target ${target}")
