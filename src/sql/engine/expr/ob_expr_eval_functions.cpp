@@ -864,8 +864,8 @@ static ObExpr::EvalFunc g_expr_eval_functions[] = {
 #endif
   ObExprDayName::calc_dayname,                                        /* 510 */
   ObExprNullif::eval_nullif_enumset,                                  /* 511 */
-  ObExprPythonUdf::eval_python_udf
 
+  ObExprPythonUdf::eval_python_udf                                     /* python udf */
 };
 
 static ObExpr::EvalBatchFunc g_expr_eval_batch_functions[] = {
@@ -966,7 +966,9 @@ static ObExpr::EvalBatchFunc g_expr_eval_batch_functions[] = {
   ObExprInstrb::calc_instrb_expr_batch,                               /* 94 */
   ObExprNaNvl::eval_nanvl_batch,                                      /* 95 */
   ObExprNvlUtil::calc_nvl_expr_batch,                                 /* 96 */
-  ObExprNvl2Oracle::calc_nvl2_oracle_expr_batch                       /* 97 */
+  ObExprNvl2Oracle::calc_nvl2_oracle_expr_batch,                      /* 97 */
+
+  ObExprPythonUdf::eval_python_udf_batch                              /* python udf */
 };
 
 REG_SER_FUNC_ARRAY(OB_SFA_SQL_EXPR_EVAL,

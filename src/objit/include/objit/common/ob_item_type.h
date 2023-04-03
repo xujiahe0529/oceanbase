@@ -476,6 +476,7 @@ typedef enum ObItemType
   T_FUN_SYS_ERRNO = 751,
   T_FUN_SYS_ADDTIME = 752,
   T_FUN_SYS_DAY_NAME = 753,
+  // ob_item_type register
   T_FUN_SYS_PYTHON_UDF = 777,
   ///< @note add new mysql only function type before this line
   T_MYSQL_ONLY_SYS_MAX_OP = 800,
