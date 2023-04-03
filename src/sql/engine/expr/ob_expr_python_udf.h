@@ -2,6 +2,7 @@
 #define  _OB_EXPR_PYTHON_UDF_
 
 #include  "sql/engine/expr/ob_expr_operator.h"
+#include  "sql/engine/python_udf_engine/python_udf_engine.h"
 
 namespace  oceanbase {
 namespace  sql {
@@ -14,9 +15,8 @@ public:
                                 ObExprResType *types_array,
                                 int64_t param_num,
                                 common::ObExprTypeCtx &type_ctx) const;
-
   virtual int calc_resultN(common::ObObj &result,
-                           const common::ObObj *objs_array,
+                           const common::ObObj *objs,
                            int64_t param_num,
                            common::ObExprCtx &expr_ctx) const;
   
@@ -27,6 +27,16 @@ public:
   static int eval_python_udf(const ObExpr &expr,
                              ObEvalCtx &ctx,
                              ObDatum &res);
+
+  static int eval_python_udf_batch(const ObExpr &expr, ObEvalCtx &ctx,
+                                   const ObBitVector &skip, const int64_t batch_size);
+
+  static int get_python_udf(pythonUdf* &pyudf);
+
+  static int obdatum2array(ObDatum *&argdatum, const ObObjType &type, PyObject *&array, const int64_t batch_size);
+
+  static int numpy2value(PyObject *numpyarray,const int loc, PyObject *&value);
+
 private:
   DISALLOW_COPY_AND_ASSIGN(ObExprPythonUdf);
 };
