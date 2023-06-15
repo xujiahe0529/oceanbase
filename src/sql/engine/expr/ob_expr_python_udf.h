@@ -2,7 +2,7 @@
 #define  _OB_EXPR_PYTHON_UDF_
 
 #include  "sql/engine/expr/ob_expr_operator.h"
-#include  "sql/engine/python_udf_engine/python_udf_engine.h"
+#include "sql/engine/python_udf_engine/python_udf_engine.h"
 
 namespace  oceanbase {
 namespace  sql {
@@ -31,9 +31,15 @@ public:
   static int eval_python_udf_batch(const ObExpr &expr, ObEvalCtx &ctx,
                                    const ObBitVector &skip, const int64_t batch_size);
 
-  static int get_python_udf(pythonUdf* &pyudf);
+  static int eval_python_udf_batch_buffer(const ObExpr &expr, ObEvalCtx &ctx,
+                                          const ObBitVector &skip, const int64_t batch_size);
 
-  static int obdatum2array(ObDatum *&argdatum, const ObObjType &type, PyObject *&array, const int64_t batch_size);
+  static int get_python_udf(pythonUdf* &pyudf, const ObExpr& expr);
+
+  static int obdatum2array(const ObDatum *argdatum, const ObObjType &type, PyObject *&array, const int64_t batch_size);
+  static int obdatum2array(const ObDatumVector &vector, const ObObjType &type, PyObject *&array, 
+                           const int64_t batch_size, const int64_t real_param, 
+                           const ObBitVector &skip, ObBitVector &eval_flags);
 
   static int numpy2value(PyObject *numpyarray,const int loc, PyObject *&value);
 

@@ -969,6 +969,7 @@ static ObExpr::EvalBatchFunc g_expr_eval_batch_functions[] = {
   ObExprNvl2Oracle::calc_nvl2_oracle_expr_batch,                      /* 97 */
 
   ObExprPythonUdf::eval_python_udf_batch                              /* python udf */
+  ObExprPythonUdf::eval_python_udf_batch_buffer                       /* python udf buffer*/
 };
 
 REG_SER_FUNC_ARRAY(OB_SFA_SQL_EXPR_EVAL,
