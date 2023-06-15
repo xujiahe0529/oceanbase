@@ -408,6 +408,26 @@ int ObMultipleMerge::get_next_rows(int64_t &count, int64_t capacity)
     }
   } else {
     ret = get_next_normal_rows(count, capacity);
+    
+    { //use buffer
+      //batch_buffer_
+      if(!batch_buffer_.inited_) {
+        batch_buffer_.init(access_param_->output_exprs_, access_ctx_->stmt_allocator_, capacity);
+      }
+      if(OB_FAIL(ret) || count == 0)
+        return ret;
+      // variables
+      int batch_size = access_param_->op_->get_batch_size();
+      ObVectorStore *vector_store = reinterpret_cast<ObVectorStore *>(block_row_store_);
+      // store in buffer
+      batch_buffer_.from_vector(vector_store); // never end_ >= 2* batch_size_
+      while(batch_buffer_.end_ < batch_size && count != 0 && !OB_FAIL(ret)) {
+        ret = get_next_normal_rows(count, capacity);
+        batch_buffer_.from_vector(vector_store);
+      }
+      count = batch_buffer_.to_vector(vector_store);
+    }
+
   }
   return ret;
 }
@@ -1288,5 +1308,106 @@ bool ObMultipleMerge::need_read_lob_columns(const blocksstable::ObDatumRow &row)
 {
   return (has_lob_column_ && row.row_flag_.is_exist());
 }
+
+// buffer for python_udf
+int ObVectorBuffer::init(const sql::ObExprPtrIArray *exprs, common::ObIAllocator *alloc, int32_t batch_size)
+{
+  int ret = OB_SUCCESS;
+  if (OB_ISNULL(alloc) || OB_ISNULL(exprs)) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_WARN("invalid argument", K(ret), KP(alloc), KP(exprs));
+  } else {
+    /*
+    if(datums_ != NULL) 
+      alloc_->free(datums_);
+    if(row_ids_ != NULL) 
+      alloc_->free(row_ids_);*/
+
+    ObDatum *buf = (ObDatum *)alloc->alloc(sizeof(ObDatum) * batch_size * exprs->count() * 2); // 2倍batch size防止溢出
+
+    if (NULL == buf) {
+      ret = OB_ALLOCATE_MEMORY_FAILED;
+      LOG_WARN("fail to alloc memory", K(ret));
+    } else {
+      inited_ = true;
+      alloc_ = alloc;
+      exprs_ = exprs;
+      colcnt_ = exprs->count();
+      batch_size_ = batch_size;
+      start_ = 0;
+      end_ = 0;
+      datums_ = buf;
+      row_ids_ = (int64_t *)alloc->alloc(sizeof(int64_t) * batch_size * 2);
+    }
+  }
+
+  return ret;
+}
+
+void ObVectorBuffer::from_vector(ObVectorStore *vector_store)
+{
+  //OB_ASSERT(end_ <= batch_size_);
+  OB_ASSERT(OB_NOT_NULL(vector_store) && OB_NOT_NULL(exprs_));
+  int64_t size = vector_store->get_row_count();
+  int64_t *row_ids = vector_store->row_ids_;
+  //copy id
+  for (int64_t i = 0; i < size; i++) { 
+    row_ids_[end_ + i] = row_ids[i];
+  }
+  //copy data
+  int64_t copy_size = size * sizeof(ObDatum);
+  for (int64_t i = 0; i < vector_store->datums_.count(); i++) {
+    ObDatum *datums = vector_store->datums_.at(i);
+    for(int64_t j = 0; j < size; j++) {
+      datums_[i * batch_size_ * 2 + end_ + j].deep_copy(datums[j], *alloc_);
+    }
+  }
+  end_ += size;
+}
+
+int ObVectorBuffer::to_vector(ObVectorStore *vector_store) 
+{
+  OB_ASSERT(start_ == 0); //from beginning
+  int64_t ret = 0;
+  int64_t col_cnt = vector_store->datums_.count();
+  if(end_ >= batch_size_) { //一次输出一个batch size大小的frame
+    //copy row_ids_
+    MEMCPY(vector_store->row_ids_, row_ids_, sizeof(int64_t ) * batch_size_);
+    //copy datums_
+    int64_t copy_size = batch_size_ * sizeof(ObDatum);
+    for (int64_t i = 0; i < col_cnt; i++) {
+      ObDatum *datums = vector_store->datums_.at(i);
+      MEMCPY(datums, datums_ + i * batch_size_ * 2 + start_, copy_size);
+    }
+    start_ += batch_size_;
+    move(col_cnt);
+    ret = batch_size_;
+  } else { //输出剩余所有  end_ < batch_size_
+    //copy row_ids_
+    MEMCPY(vector_store->row_ids_, row_ids_, sizeof(int64_t ) * end_);
+    //copy datums_
+    for (int64_t i = 0; i < col_cnt; i++) {
+      ObDatum *datums = vector_store->datums_.at(i);
+      int64_t copy_size = end_ * sizeof(ObDatum);
+      MEMCPY(datums, datums_ + i * batch_size_* 2 + start_, copy_size);
+    }
+    ret = end_;
+    end_ = 0;
+    //inited_ = false;
+  }
+  return ret; //返回获取到的元组数量
+}
+
+void ObVectorBuffer::move(int64_t col_cnt) //move to beginning
+{
+  MEMMOVE(row_ids_, row_ids_ + start_, (end_ - start_) * sizeof(int64_t));
+  int64_t copy_size = (end_ - start_) * sizeof(ObDatum);
+  for (int64_t i = 0; i < col_cnt; i++) {
+    MEMMOVE(datums_ + i * batch_size_ * 2, datums_ + i * batch_size_ * 2 + start_, copy_size);
+  }
+  end_ -= start_;
+  start_ = 0;
+}
+
 }
 }

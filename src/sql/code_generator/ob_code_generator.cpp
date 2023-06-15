@@ -124,7 +124,6 @@ int ObCodeGenerator::detect_batch_size(const ObLogPlan &log_plan, int64_t &batch
           exec_ctx->get_sql_ctx()->schema_guard_,
           exec_ctx->get_physical_plan_ctx()->get_original_param_cnt(),
           0);
-      //change batch size (default 256)
       //tenant_config->_rowsets_max_rows = 256; 
       int64_t rowsets_max_rows = tenant_config->_rowsets_max_rows;
       OZ(opt_params->get_integer_opt_param(ObOptParamHint::ROWSETS_MAX_ROWS, rowsets_max_rows));
@@ -132,6 +131,9 @@ int ObCodeGenerator::detect_batch_size(const ObLogPlan &log_plan, int64_t &batch
                                    rowsets_max_rows,
                                    tenant_config->_rowsets_target_maxsize,
                                    scan_cardinality));
+      //change batch size (default 256)
+      batch_size = 2048;
+      LOG_WARN("change batch size");
     }
     // TODO qubin.qb: remove the tracelog when rowsets/batch_size is displayed
     // in plan

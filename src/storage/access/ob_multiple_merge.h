@@ -33,6 +33,32 @@ namespace oceanbase
 {
 namespace storage
 {
+
+// buffer for python_udf
+struct ObVectorBuffer
+{
+  ObVectorBuffer()
+    : inited_(false), alloc_(NULL), exprs_(NULL), batch_size_(0),
+    //: inited_(false), batch_size_(0),
+      start_(0), end_(0), datums_(NULL), row_ids_(NULL) 
+  {}
+  int init(const sql::ObExprPtrIArray *exprs, common::ObIAllocator *alloc, int32_t batch_size);
+  //int init(int32_t cols, int32_t batch_size);
+  void from_vector(ObVectorStore *vector_store);
+  int to_vector(ObVectorStore *vector_store);
+  void move(int64_t col_cnt);
+public:
+  bool inited_;
+  common::ObIAllocator *alloc_;
+  const sql::ObExprPtrIArray *exprs_;
+  int32_t colcnt_;
+  int32_t batch_size_; 
+  int32_t start_; 
+  int32_t end_; //record used size
+  ObDatum *datums_;
+  int64_t *row_ids_;
+};
+
 class ObBlockRowStore;
 class ObMultipleMerge : public ObQueryRowIterator
 {

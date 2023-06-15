@@ -67,7 +67,7 @@ public:
   virtual bool is_end() const override final
   { return iter_end_flag_ != IterEndState::PROCESSING; }
   TO_STRING_KV(K_(iter_end_flag), K_(batch_size), K_(row_capacity));
-protected:
+//protected:
   int get_row_ids(
       blocksstable::ObIMicroBlockReader *reader,
       int64_t &begin_index,

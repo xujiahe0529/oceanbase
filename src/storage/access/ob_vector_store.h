@@ -59,7 +59,7 @@ public:
   virtual int reuse_capacity(const int64_t capacity) override;
   virtual bool is_empty() const override final { return 0 == count_; }
   DECLARE_TO_STRING;
-private:
+//private:
   void fill_group_idx(const int64_t group_idx);
 
   int64_t count_;
