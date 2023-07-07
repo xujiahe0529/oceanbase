@@ -54,3 +54,4 @@ add_custom_command(
 
 oblib_add_library(lz4 lz4-all.a.o)
 oblib_add_extra_objects(${CMAKE_CURRENT_BINARY_DIR}/lz4-all.a.o)
+set_target_properties(lz4 PROPERTIES LINKER_LANGUAGE CXX)

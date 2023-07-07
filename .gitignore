@@ -339,3 +339,7 @@ deps/3rd
 ############# test #############
 test/tmp
 test/var
+
+############# misc #############
+dist/
+building/

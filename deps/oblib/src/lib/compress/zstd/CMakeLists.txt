@@ -49,9 +49,9 @@ add_custom_command(
   COMMAND ${OB_LD_BIN} -r $<TARGET_OBJECTS:zstd_objs> -o zstd_objs.tmp.o
   COMMAND ${OB_OBJCOPY_BIN} --localize-hidden zstd_objs.tmp.o zstd_objs.o
   DEPENDS zstd_objs
-  BYPRODUCTS zstd_objs.o
   COMMAND_EXPAND_LISTS
   )
 
 oblib_add_extra_objects(${CMAKE_CURRENT_BINARY_DIR}/zstd_objs.o)
 oblib_add_library(zstd zstd_objs.o)
+set_target_properties(zstd PROPERTIES LINKER_LANGUAGE CXX)

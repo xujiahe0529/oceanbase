@@ -130,6 +130,8 @@ function do_build
     TYPE=$1; shift
     prepare_build_dir $TYPE || return
     ${CMAKE_COMMAND} ${TOPDIR} "$@"
+    echo "==================================================================="
+    echo "${CMAKE_COMMAND} ${TOPDIR} "$@""
     if [ $? -ne 0 ]; then
       echo_err "Failed to generate Makefile"
       exit 1

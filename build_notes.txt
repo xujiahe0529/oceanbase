@@ -1,0 +1,4 @@
+# Default cmake cmdline
+<ob_project_location>/deps/3rd/usr/local/oceanbase/devtools/bin/cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS=1 /home/duw1/oceanbase -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DOB_USE_LLD=ON -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -S<ob_project_location> -B<ob_project_location>/build_debug -G "Unix Makefiles"
+# cmake build
+cmake --build <cmake_config_dir> -j
