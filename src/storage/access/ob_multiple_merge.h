@@ -176,6 +176,7 @@ private:
   ScanState scan_state_;
   // disallow copy
   DISALLOW_COPY_AND_ASSIGN(ObMultipleMerge);
+  ObVectorBuffer batch_buffer_;
 };
 
 OB_INLINE int ObMultipleMerge::check_need_refresh_table(bool &need_refresh)
