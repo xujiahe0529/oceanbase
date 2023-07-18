@@ -1499,6 +1499,7 @@ constexpr int OB_LS_RESTORE_FAILED = -9094;
 constexpr int OB_NO_TABLET_NEED_BACKUP = -9095;
 constexpr int OB_ERR_RESTORE_STANDBY_VERSION_LAG = -9096;
 constexpr int OB_ERR_RESTORE_PRIMARY_TENANT_DROPPED = -9097;
+constexpr int OB_CLOUD_OBJECT_NOT_APPENDABLE = -9098;
 constexpr int OB_NO_SUCH_FILE_OR_DIRECTORY = -9100;
 constexpr int OB_FILE_OR_DIRECTORY_EXIST = -9101;
 constexpr int OB_FILE_OR_DIRECTORY_PERMISSION_DENIED = -9102;
@@ -2477,7 +2478,7 @@ constexpr int OB_ERR_INVALID_DATE_MSG_FMT_V2 = -4219;
 #define OB_ERR_FIELD_TYPE_NOT_ALLOWED_AS_PARTITION_FIELD__USER_ERROR_MSG "Field \'%.*s\' is of a not allowed type for this type of partitioning"
 #define OB_ERR_TOO_LONG_IDENT__USER_ERROR_MSG "Identifier name \'%.*s\' is too long"
 #define OB_ERR_WRONG_TYPE_FOR_VAR__USER_ERROR_MSG "Incorrect argument type to variable '%.*s'"
-#define OB_WRONG_USER_NAME_LENGTH__USER_ERROR_MSG "String '%.*s' is too long for user name (should be no longer than 16)"
+#define OB_WRONG_USER_NAME_LENGTH__USER_ERROR_MSG "String '%.*s' is too long for user name (should be no longer than 64)"
 #define OB_ERR_PRIV_USAGE__USER_ERROR_MSG "Incorrect usage of DB GRANT and GLOBAL PRIVILEGES"
 #define OB_ILLEGAL_GRANT_FOR_TABLE__USER_ERROR_MSG "Illegal GRANT/REVOKE command; please consult the manual to see which privileges can be used"
 #define OB_ERR_REACH_AUTOINC_MAX__USER_ERROR_MSG "Failed to read auto-increment value from storage engine"
@@ -3492,7 +3493,7 @@ constexpr int OB_ERR_INVALID_DATE_MSG_FMT_V2 = -4219;
 #define OB_EXTRACTVALUE_NOT_LEAF_NODE__USER_ERROR_MSG "EXTRACTVALUE can only retrieve value of leaf node"
 #define OB_XML_INSERT_FRAGMENT__USER_ERROR_MSG "Cannot insert XML fragments"
 #define OB_ERR_NO_ORDER_MAP_SQL__USER_ERROR_MSG "cannot ORDER objects without MAP or ORDER method"
-#define OB_ERR_XMLELEMENT_ALIASED__USER_ERROR_MSG "parameter 1 of function XMLELEMENT must be aliased"
+#define OB_ERR_XMLELEMENT_ALIASED__USER_ERROR_MSG "parameter %d of function XMLELEMENT must be aliased"
 #define OB_INVALID_ALTERATIONG_DATATYPE__USER_ERROR_MSG "invalid alteration of datatype"
 #define OB_INVALID_MODIFICATION_OF_COLUMNS__USER_ERROR_MSG "invalid modification of columns"
 #define OB_ERR_NULL_FOR_XML_CONSTRUCTOR__USER_ERROR_MSG "Expected XML tag , got no content"
@@ -3595,6 +3596,7 @@ constexpr int OB_ERR_INVALID_DATE_MSG_FMT_V2 = -4219;
 #define OB_NO_TABLET_NEED_BACKUP__USER_ERROR_MSG "No tablet need backup"
 #define OB_ERR_RESTORE_STANDBY_VERSION_LAG__USER_ERROR_MSG "standby binary version is lower than primary data version, standby need upgrade"
 #define OB_ERR_RESTORE_PRIMARY_TENANT_DROPPED__USER_ERROR_MSG "primary tenant has been dropped"
+#define OB_CLOUD_OBJECT_NOT_APPENDABLE__USER_ERROR_MSG "normal object in object_storage(oss,cos,etc.) can't be appended content"
 #define OB_NO_SUCH_FILE_OR_DIRECTORY__USER_ERROR_MSG "no such file or directory"
 #define OB_FILE_OR_DIRECTORY_EXIST__USER_ERROR_MSG "file or directory already exist"
 #define OB_FILE_OR_DIRECTORY_PERMISSION_DENIED__USER_ERROR_MSG "file or directory permission denied"
@@ -4575,7 +4577,7 @@ constexpr int OB_ERR_INVALID_DATE_MSG_FMT_V2 = -4219;
 #define OB_ERR_FIELD_TYPE_NOT_ALLOWED_AS_PARTITION_FIELD__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -5178, Field \'%.*s\' is of a not allowed type for this type of partitioning"
 #define OB_ERR_TOO_LONG_IDENT__ORA_USER_ERROR_MSG "ORA-00972: identifier \'%.*s\' is too long"
 #define OB_ERR_WRONG_TYPE_FOR_VAR__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -5180, Incorrect argument type to variable '%.*s'"
-#define OB_WRONG_USER_NAME_LENGTH__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -5181, String '%.*s' is too long for user name (should be no longer than 16)"
+#define OB_WRONG_USER_NAME_LENGTH__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -5181, String '%.*s' is too long for user name (should be no longer than 64)"
 #define OB_ERR_PRIV_USAGE__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -5182, Incorrect usage of DB GRANT and GLOBAL PRIVILEGES"
 #define OB_ILLEGAL_GRANT_FOR_TABLE__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -5183, Illegal GRANT/REVOKE command; please consult the manual to see which privileges can be used"
 #define OB_ERR_REACH_AUTOINC_MAX__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -5184, Failed to read auto-increment value from storage engine"
@@ -5590,7 +5592,7 @@ constexpr int OB_ERR_INVALID_DATE_MSG_FMT_V2 = -4219;
 #define OB_EXTRACTVALUE_NOT_LEAF_NODE__ORA_USER_ERROR_MSG "ORA-19026: EXTRACTVALUE can only retrieve value of leaf node"
 #define OB_XML_INSERT_FRAGMENT__ORA_USER_ERROR_MSG "ORA-19010: Cannot insert XML fragments"
 #define OB_ERR_NO_ORDER_MAP_SQL__ORA_USER_ERROR_MSG "ORA-22950: cannot ORDER objects without MAP or ORDER method"
-#define OB_ERR_XMLELEMENT_ALIASED__ORA_USER_ERROR_MSG "ORA-19208: parameter 1 of function XMLELEMENT must be aliased"
+#define OB_ERR_XMLELEMENT_ALIASED__ORA_USER_ERROR_MSG "ORA-19208: parameter %d of function XMLELEMENT must be aliased"
 #define OB_INVALID_ALTERATIONG_DATATYPE__ORA_USER_ERROR_MSG "ORA-22858: invalid alteration of datatype"
 #define OB_INVALID_MODIFICATION_OF_COLUMNS__ORA_USER_ERROR_MSG "ORA-22859: invalid modification of columns"
 #define OB_ERR_NULL_FOR_XML_CONSTRUCTOR__ORA_USER_ERROR_MSG "ORA-19032: Expected XML tag , got no content"
@@ -5693,6 +5695,7 @@ constexpr int OB_ERR_INVALID_DATE_MSG_FMT_V2 = -4219;
 #define OB_NO_TABLET_NEED_BACKUP__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -9095, No tablet need backup"
 #define OB_ERR_RESTORE_STANDBY_VERSION_LAG__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -9096, standby binary version is lower than primary data version, standby need upgrade"
 #define OB_ERR_RESTORE_PRIMARY_TENANT_DROPPED__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -9097, primary tenant has been dropped"
+#define OB_CLOUD_OBJECT_NOT_APPENDABLE__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -9098, normal object in object_storage(oss,cos,etc.) can't be appended content"
 #define OB_NO_SUCH_FILE_OR_DIRECTORY__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -9100, no such file or directory"
 #define OB_FILE_OR_DIRECTORY_EXIST__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -9101, file or directory already exist"
 #define OB_FILE_OR_DIRECTORY_PERMISSION_DENIED__ORA_USER_ERROR_MSG "ORA-00600: internal error code, arguments: -9102, file or directory permission denied"
@@ -5958,7 +5961,7 @@ constexpr int OB_ERR_INVALID_DATE_MSG_FMT_V2 = -4219;
 #define OB_ERR_DATA_TOO_LONG_MSG_FMT_V2__ORA_USER_ERROR_MSG "ORA-12899: value too large for column %.*s (actual: %ld, maximum: %ld)"
 #define OB_ERR_INVALID_DATE_MSG_FMT_V2__ORA_USER_ERROR_MSG "ORA-01861: Incorrect datetime value for column '%.*s' at row %ld"
 
-extern int g_all_ob_errnos[2094];
+extern int g_all_ob_errnos[2095];
 
   const char *ob_error_name(const int oberr);
   const char* ob_error_cause(const int oberr);
