@@ -495,6 +495,7 @@ typedef enum ObItemType
 
   // ob_item_type register
   T_FUN_SYS_PYTHON_UDF = 777,
+  T_FUN_SYS_COMPRESS_MODEL = 778,
   
   ///< @note add new mysql only function type before this line
   T_MYSQL_ONLY_SYS_MAX_OP = 800,

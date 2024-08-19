@@ -1048,4 +1048,5 @@
 #define N_NLS_INITCAP                       "nls_initcap"
 
 #define N_PYTHON_UDF                        "python_udf"
+#define N_COMPRESS_MODEL                    "compress_model"
 #endif //OCEANBASE_LIB_OB_NAME_DEF_H_

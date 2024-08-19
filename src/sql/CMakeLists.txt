@@ -624,6 +624,7 @@ ob_set_subtarget(ob_sql engine_expr
   engine/expr/ob_expr_st_within.cpp
   engine/expr/ob_expr_sql_mode_convert.cpp
   engine/expr/ob_expr_python_udf.cpp
+  engine/expr/ob_expr_compress_model.cpp
 )
 
 ob_set_subtarget(ob_sql engine_join

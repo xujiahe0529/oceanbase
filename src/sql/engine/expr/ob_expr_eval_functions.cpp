@@ -312,6 +312,7 @@
 #include "ob_expr_sql_mode_convert.h"
 #include "ob_expr_initcap.h"
 #include "ob_expr_python_udf.h"
+#include "ob_expr_compress_model.h"
 
 namespace oceanbase
 {
@@ -992,7 +993,8 @@ static ObExpr::EvalFunc g_expr_eval_functions[] = {
   NULL,                                                               /* 590 */
   NULL,                                                               /* 591 */
   ObExprNlsInitCap::calc_nls_initcap_expr,                             /* 592 */
-  ObExprPythonUdf::eval_test_udf                                      /* test meta data udf */
+  ObExprPythonUdf::eval_test_udf,                                      /* test meta data udf */
+  ObExprCompressModel::eval_compress_model                             /* compress model */
 };
 
 static ObExpr::EvalBatchFunc g_expr_eval_batch_functions[] = {
