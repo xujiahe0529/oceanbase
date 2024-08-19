@@ -120,6 +120,7 @@ PHY_OP_DEF(PHY_OPTIMIZER_STATS_GATHERING)
 /* end of phy operator type */
 PHY_OP_DEF(PHY_NEW_OP_ADAPTER)
 PHY_OP_DEF(PHY_FAKE_TABLE)  /* for testing only*/
+PHY_OP_DEF(PHY_PYTHON_UDF)  /* python udf extension*/
 PHY_OP_DEF(PHY_END)
 #endif /*PHY_OP_DEF*/
 

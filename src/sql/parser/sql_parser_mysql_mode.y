@@ -4524,6 +4524,11 @@ PYTHON_CODE '{' STRING_VALUE '}'
   malloc_non_terminal_node($$, result->malloc_pool_, T_PYTHON_CODE, 1, $3);
 }
 |
+'{' STRING_VALUE '}'
+{
+  malloc_non_terminal_node($$, result->malloc_pool_, T_PYTHON_CODE, 1, $2);
+}
+|
 FILE_PATH STRING_VALUE
 {
   malloc_non_terminal_node($$, result->malloc_pool_, T_FILE_PATH, 1, $2);

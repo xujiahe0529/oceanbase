@@ -267,6 +267,7 @@ ObExpr::ObExpr()
     extra_info_(NULL)
 {
   is_called_in_sql_ = 1;
+  extra_buf_ = {false, 0, NULL, NULL, NULL};
 }
 
 char *ObExpr::alloc_str_res_mem(ObEvalCtx &ctx, const int64_t size, const int64_t idx) const
@@ -642,6 +643,29 @@ int ObExpr::do_eval_batch(ObEvalCtx &ctx,
                           const ObBitVector &skip,
                           const int64_t size) const
 {
+  if(extra_buf_.buf_flag_) {
+    //use predict opreator buffer
+    int ret = OB_SUCCESS;
+    ObEvalInfo &info = get_eval_info(ctx);
+    ObBitVector &eval_flag = get_evaluated_flags(ctx);
+    if (info.projected_ || NULL == eval_batch_func_ || info.evaluated_) {
+      // expr values is projected by child or has no evaluate func, do nothing.
+    } else if (OB_UNLIKELY(need_stack_check_) && OB_FAIL(check_stack_overflow())) {
+      SQL_LOG(WARN, "failed to check stack overflow", K(ret));
+    } else {
+      eval_flag.reset(size);
+      ret = (*eval_batch_func_)(*this, ctx, skip, size);
+      if (OB_SUCC(ret)) {
+        if (!info.evaluated_) {
+          info.notnull_ = false;
+          info.point_to_frame_ = true;
+          info.cnt_ = size;
+          info.evaluated_ = true;
+        }
+      }
+    }
+    return ret;
+  }
 
   int ret = OB_SUCCESS;
   char *frame = ctx.frames_[frame_idx_];

@@ -40,6 +40,7 @@ int ObTransformPullUpFilter::transform_one_stmt(
   ObSelectStmt *select_stmt = NULL;
   ObSelectStmt *sub_stmt = NULL;
   ObSEArray<ObRawExpr *, 4> target_exprs;
+  bool allowed = false;
 
   if (OB_ISNULL(stmt) || OB_ISNULL(ctx_)) {
     ret = OB_ERR_UNEXPECTED;
@@ -47,12 +48,15 @@ int ObTransformPullUpFilter::transform_one_stmt(
   } else if (!stmt->is_select_stmt()) {
     // do nothing
     OPT_TRACE("not select stmt, can not transform");
+  } else if (OB_FAIL(check_hint_allowed(*stmt, allowed))) {
+    // 检查query hint异常
+    LOG_WARN("failed to check hint", K(ret));
+  } else if (!allowed) {
+    // do nothing
+    OPT_TRACE("hint reject transform");
   } else if (FALSE_IT(select_stmt = static_cast<ObSelectStmt*>(stmt))) {
     //准备进行改写
     LOG_WARN("select stmt is NULL", K(ret));
-  } else if (select_stmt->get_condition_exprs().empty()) {
-    //没有改写空间
-    LOG_WARN("input preds is empty", K(ret));
   } else if (OB_FAIL(generate_child_level_stmt(select_stmt, 
                                                sub_stmt))) {
     LOG_WARN("failed to generate child level sub stmt", K(ret));
@@ -82,7 +86,8 @@ int ObTransformPullUpFilter::generate_child_level_stmt(
     ObSelectStmt *&sub_stmt)
 {
   int ret = OB_SUCCESS;
-  ObSEArray<ObRawExpr *, 4> condition_exprs;
+  ObSEArray<ObRawExpr *, 4> python_udf_exprs; // for remove
+  ObSEArray<ObRawExpr *, 4> select_exprs;
   //deep copy stmt as subplan
   if (OB_ISNULL(ctx_) || OB_ISNULL(ctx_->stmt_factory_) || OB_ISNULL(ctx_->expr_factory_)) {
     ret = OB_ERR_UNEXPECTED;
@@ -99,10 +104,21 @@ int ObTransformPullUpFilter::generate_child_level_stmt(
                                                    ctx_->src_qb_name_,
                                                    ctx_->src_hash_val_))) {
     LOG_WARN("failed to adjust statement id", K(ret));
-  } else if (OB_FAIL(extract_python_udf_exprs(sub_stmt, condition_exprs))) {
-    LOG_WARN("failed to remove python udf condition.", K(ret));
+  } else if (OB_FAIL(ObTransformUtils::extract_python_udf_exprs(sub_stmt->get_condition_exprs(), python_udf_exprs))) {
+    LOG_WARN("failed to remove python udf condition exprs.", K(ret));
+  } else if (OB_FAIL(sub_stmt->get_select_exprs(select_exprs))) {
+    LOG_WARN("failed to get select exprs of child stmt.", K(ret));
+  } else if (OB_FAIL(ObTransformUtils::extract_python_udf_exprs(select_exprs, python_udf_exprs))) {
+    LOG_WARN("failed to remove python udf projection exprs.", K(ret));
   } else {
+    // remove select items
     sub_stmt->get_select_items().reset();
+    // remove limit exprs
+    sub_stmt->set_limit_offset(NULL, NULL);
+    // keep group-by exprs
+    ObRawExpr *limit_percent_expr = sub_stmt->get_limit_percent_expr();
+    if(OB_NOT_NULL(limit_percent_expr))
+      limit_percent_expr->reset();
   }
   //add columnItem exprs into selectItem
   for (int64_t j = 0; OB_SUCC(ret) && j < sub_stmt->get_column_size(); ++j) {
@@ -112,6 +128,15 @@ int ObTransformPullUpFilter::generate_child_level_stmt(
       LOG_WARN("failed to push back into select item array.", K(ret));
     } else { /*do nothing.*/ }
   }
+  // add aggr items into selectItem
+  for (int64_t j = 0; OB_SUCC(ret) && j < sub_stmt->get_aggr_item_size(); ++j) {
+    if (OB_FAIL(ObTransformUtils::create_select_item(*ctx_->allocator_,
+                                                     sub_stmt->get_aggr_item(j),
+                                                     sub_stmt))) {
+      LOG_WARN("failed to push back into select item array.", K(ret));
+    }
+  }
+  
   return ret;
 }
 
@@ -128,17 +153,20 @@ int ObTransformPullUpFilter::generate_parent_level_stmt(ObSelectStmt *&select_st
   if (OB_ISNULL(select_stmt)) {
     ret = OB_ERR_UNEXPECTED;
     LOG_WARN("select stmt is null", K(ret));
-  } else if(OB_FAIL(select_stmt->get_column_exprs(old_exprs))) {
+  } else if (OB_FAIL(select_stmt->get_column_exprs(old_exprs))) {
     LOG_WARN("old exprs is null", K(ret));
-  }
-  else {
-    //clear select stmt, keep conditions
+  //} else if (extract_old_exprs(old_exprs, select_stmt)) {
+  } else if (append(old_exprs, select_stmt->get_aggr_items())) {
+    LOG_WARN("failed to extract aggr items into old exprs is null", K(ret));
+  } else {
+    // clear select stmt, keep conditions and projections 
     select_stmt->get_table_items().reset();
     select_stmt->get_joined_tables().reset();
     select_stmt->get_from_items().reset();
     select_stmt->get_having_exprs().reset();
     select_stmt->get_order_items().reset();
-    select_stmt->get_group_exprs().reset();
+    select_stmt->get_group_exprs().reset(); // remove group-by exprs & aggr exprs
+    select_stmt->get_aggr_items().reset();
     select_stmt->get_rollup_exprs().reset();
     select_stmt->get_column_items().reset();
     select_stmt->get_part_exprs().reset();
@@ -169,9 +197,10 @@ int ObTransformPullUpFilter::generate_parent_level_stmt(ObSelectStmt *&select_st
       LOG_WARN("failed to update column items rel id.", K(ret));
     } else if (OB_FAIL(select_stmt->formalize_stmt(ctx_->session_info_))) {
       LOG_WARN("failed to formalized stmt.", K(ret));
-    } else if (OB_FAIL(extract_python_udf_exprs(select_stmt, condition_exprs))) {
+    } else if (OB_FAIL(ObTransformUtils::extract_python_udf_exprs(select_stmt->get_condition_exprs(), condition_exprs))) {
       LOG_WARN("failed to extract python udf filters.", K(ret));
     } else {
+      // reset parent stmt conditons
       select_stmt->get_condition_exprs().reset();
       append(select_stmt->get_condition_exprs(), condition_exprs);
     }
@@ -180,8 +209,8 @@ int ObTransformPullUpFilter::generate_parent_level_stmt(ObSelectStmt *&select_st
 }
 
 int ObTransformPullUpFilter::construct_column_items_from_exprs(
-    const ObIArray<ObRawExpr*> &column_exprs,
-    ObIArray<ColumnItem> &column_items)
+  const ObIArray<ObRawExpr*> &column_exprs,
+  ObIArray<ColumnItem> &column_items)
 {
   int ret = OB_SUCCESS;
   for (int64_t i = 0; OB_SUCC(ret) && i < column_exprs.count(); ++i) {
@@ -198,54 +227,6 @@ int ObTransformPullUpFilter::construct_column_items_from_exprs(
   return ret;
 }
 
-//may add to ObTransfromUtils
-int ObTransformPullUpFilter::extract_python_udf_exprs(
-    ObSelectStmt *&stmt,
-    ObIArray<ObRawExpr *> &target_exprs) 
-{
-  int ret = OB_SUCCESS;
-  //extract predicates
-  ObIArray<ObRawExpr *> &predicates = stmt->get_condition_exprs();
-  ObRawExpr *expr = NULL;
-  int32_t i = 0;
-  while (OB_SUCC(ret) && i < predicates.count()) {
-    expr = predicates.at(i);
-    if(expr_contain_type(expr, T_FUN_SYS_PYTHON_UDF)) {
-      target_exprs.push_back(expr);
-      predicates.remove(i);
-    } else {
-      ++i;
-    }
-  }
-  //extract join conditions
-
-
-  //do check exprs
-  if(target_exprs.empty()) {
-    ret = OB_ERR_UNEXPECTED;
-    LOG_WARN("exprs have not python udf", K(ret));
-  }
-  return ret;
-}
-
-//simple recusive find python_udf, may add into visitor?
-bool ObTransformPullUpFilter::expr_contain_type(
-    ObRawExpr *expr,
-    ObExprOperatorType type)
-{
-  if(OB_ISNULL(expr)) {
-    return false;
-  } else if(expr->get_expr_type() == type) {
-    return true;
-  } else {
-    for(int32_t i = 0; i < expr->get_param_count(); i++) {
-      if(expr_contain_type(expr->get_param_expr(i), type))
-        return true;
-    }
-    return false;
-  }
-}
-
 int ObTransformPullUpFilter::need_transform(const common::ObIArray<ObParentDMLStmt> &parent_stmts,
   const int64_t current_level,
   const ObDMLStmt &stmt,
@@ -255,18 +236,65 @@ int ObTransformPullUpFilter::need_transform(const common::ObIArray<ObParentDMLSt
   LOG_TRACE("Check need transform of ObTransformPullUpFilter.", K(ret));
   need_trans = false;
   ObSEArray<ObSelectStmt*, 16> child_stmts;
-  if (OB_FAIL(stmt.get_child_stmts(child_stmts))) {
+  ObSEArray<ObRawExpr *, 4> select_exprs;
+  if (!stmt.is_select_stmt()) {
+    // do nothing
+    OPT_TRACE("not select stmt, can not transform");
+  /*} else if (OB_FAIL(stmt.get_child_stmts(child_stmts))) {
     LOG_WARN("get child stmt failed.", K(ret));
   } else if (!child_stmts.empty()) {
-    LOG_WARN("exist child stmts.", K(ret));
+    LOG_WARN("exist child stmts.", K(ret));*/
+  } else if (OB_FAIL(static_cast<const ObSelectStmt &>(stmt).get_select_exprs(select_exprs))) {
+    LOG_WARN("get select exprs failed.", K(ret));
+  } else if (select_exprs.empty()) {
+    LOG_WARN("get none select exprs.", K(ret));
   } else {
+    // check stmt condition exprs
     for(int32_t i = 0; i < stmt.get_condition_size(); i++) {
-      if(expr_contain_type(const_cast<ObRawExpr *>(stmt.get_condition_expr(i)), T_FUN_SYS_PYTHON_UDF)) {
+      if(ObTransformUtils::expr_contain_type(const_cast<ObRawExpr *>(stmt.get_condition_expr(i)), T_FUN_SYS_PYTHON_UDF)) {
         need_trans = true;
+        LOG_WARN("python udf in condition exprs.", K(ret));
+        break;
+      }
+    }
+    // check stmt projection exprs
+    for(int32_t i = 0; i < select_exprs.count(); i++) {
+      if(ObTransformUtils::expr_contain_type(select_exprs.at(i), T_FUN_SYS_PYTHON_UDF)) {
+        need_trans = true;
+        LOG_WARN("python udf in select exprs.", K(ret));
         break;
       }
     }
   }
+  return ret;
+}
+
+int ObTransformPullUpFilter::check_hint_allowed(const ObDMLStmt &stmt,
+                                                bool &allowed)
+{
+  int ret = OB_SUCCESS;
+  allowed = true;
+  const ObQueryHint *query_hint = NULL;
+  const ObHint *myhint = get_hint(stmt.get_stmt_hint());
+  bool is_disable = (NULL != myhint) && myhint->is_disable_hint();
+  const ObHint *no_rewrite = stmt.get_stmt_hint().get_no_rewrite_hint();
+  if (OB_ISNULL(ctx_) || OB_ISNULL(query_hint = stmt.get_stmt_hint().query_hint_)) {
+    ret = OB_ERR_UNEXPECTED;
+    LOG_WARN("unexpected null", K(ret), K(ctx_), K(query_hint));
+  } else if (query_hint->has_outline_data()) {
+    // outline data allowed unnest
+    allowed = query_hint->is_valid_outline_transform(ctx_->trans_list_loc_, myhint);
+  } else if (NULL != myhint && myhint->is_enable_hint()) {
+    allowed = true;
+  } else if (is_disable || NULL != no_rewrite) {
+    allowed = false;
+    if (OB_FAIL(ctx_->add_used_trans_hint(no_rewrite))) {
+      LOG_WARN("failed to add used trans hint", K(ret));
+    } else if (is_disable && OB_FAIL(ctx_->add_used_trans_hint(myhint))) {
+      LOG_WARN("failed to add used trans hint", K(ret));
+    }
+  }
+  allowed = true;
   return ret;
 }
 

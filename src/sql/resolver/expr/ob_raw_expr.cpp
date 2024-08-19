@@ -4244,6 +4244,8 @@ int ObPythonUdfRawExpr::set_udf_meta(share::schema::ObPythonUDF &udf)
     LOG_WARN("fail to write pycall", K(udf.get_pycall_str()), K(ret));
   } else if (OB_FAIL(udf.get_arg_types_arr(udf_meta_.udf_attributes_types_))){ 
     LOG_WARN("fail to insert attributes types", K(udf.get_pycall_str()), K(ret));
+  } else if (OB_FAIL(udf.get_arg_names_arr(udf_meta_.udf_attributes_names_))){ 
+    LOG_WARN("fail to insert attributes names", K(udf.get_pycall_str()), K(ret));
   }
   return ret;
 }
@@ -4254,6 +4256,49 @@ bool ObPythonUdfRawExpr::inner_same_as(const ObRawExpr &expr,
   UNUSED(expr);
   UNUSED(check_context);
   return false;
+}
+
+int ObPythonUdfRawExpr::get_name_internal(char *buf, const int64_t buf_len, int64_t &pos,
+                                          ExplainType type) const
+{
+  int ret = OB_SUCCESS;
+  int64_t i = 0;
+  if (OB_FAIL(BUF_PRINTF("%.*s(", udf_meta_.name_.length(), udf_meta_.name_.ptr()))) {
+      LOG_WARN("fail to BUF_PRINTF", K(ret));
+  } else if (get_param_count() > 1) {
+    for (; OB_SUCC(ret) && i < get_param_count() - 1; ++i) {
+      if (OB_ISNULL(get_param_expr(i))) {
+        ret = OB_ERR_UNEXPECTED;
+        LOG_WARN("param_expr is NULL", K(i), K(ret));
+      } else if (OB_FAIL(get_param_expr(i)->get_name(buf, buf_len, pos, type))) {
+        LOG_WARN("fail to get_name", K(i), K(ret));
+      } else if (OB_FAIL(BUF_PRINTF(", "))) {
+        LOG_WARN("fail to BUF_PRINTF", K(ret));
+      } else {}
+    }
+  }
+  if (OB_SUCC(ret) && get_param_count() >= 1) {
+    if (OB_ISNULL(get_param_expr(i))) {
+      ret = OB_ERR_UNEXPECTED;
+      LOG_WARN("poram expr is NULL", K(i), K(ret));
+    } else if (OB_FAIL(get_param_expr(i)->get_name(buf, buf_len, pos, type))) {
+      LOG_WARN("fail to get_name", K(ret));
+    } else {}
+  }
+  if (OB_SUCC(ret)) {
+    if (OB_FAIL(BUF_PRINTF(")"))) {
+      LOG_WARN("fail to BUF_PRINTF", K(ret));
+    } else if (EXPLAIN_EXTENDED == type) {
+      if (OB_FAIL(BUF_PRINTF("("))) {
+        LOG_WARN("fail to BUF_PRINTF", K(ret));
+      } else if (OB_FAIL(BUF_PRINTF("%p", this))) {
+        LOG_WARN("fail to BUF_PRINTF", K(ret));
+      } else if (OB_FAIL(BUF_PRINTF(")"))) {
+        LOG_WARN("fail to BUF_PRINTF", K(ret));
+      } else {}
+    } else {}
+  }
+  return ret;
 }
 
 int ObCollectionConstructRawExpr::set_access_names(

@@ -362,6 +362,14 @@ typedef common::ObFixedArray<common::ObString, common::ObIAllocator> ObStrValues
 #define CHECK_STRING_LENGTH(expr, datum)
 #endif
 
+//for python udf execution
+struct predict_buf_ {
+  bool buf_flag_;
+  int buf_size_;
+  ObDatum *result_;
+  ObBitVector *skip_;
+  ObBitVector *eval_flag_;
+};
 
 // default evaluate batch function which call eval() for every datum of batch.
 extern int expr_default_eval_batch_func(BATCH_EVAL_FUNC_ARG_DECL);
@@ -401,12 +409,17 @@ public:
   {
     ObDatumVector datumsvector;
     datumsvector.set_batch(is_batch_result());
-    datumsvector.datums_ = reinterpret_cast<ObDatum *>(ctx.frames_[frame_idx_] + datum_off_);
+    if(extra_buf_.buf_flag_)
+      datumsvector.datums_ = extra_buf_.result_;
+    else
+      datumsvector.datums_ = reinterpret_cast<ObDatum *>(ctx.frames_[frame_idx_] + datum_off_);
     return datumsvector;
   }
 
   ObDatum *locate_batch_datums(ObEvalCtx &ctx) const
   {
+    if(extra_buf_.buf_flag_)
+      return extra_buf_.result_;
     return reinterpret_cast<ObDatum *>(ctx.frames_[frame_idx_] + datum_off_);
   }
 
@@ -418,11 +431,15 @@ public:
 
   ObBitVector &get_evaluated_flags(ObEvalCtx &ctx) const
   {
+    if(extra_buf_.buf_flag_)
+      return *extra_buf_.eval_flag_;
     return *to_bit_vector(ctx.frames_[frame_idx_] + eval_flags_off_);
   }
 
   ObBitVector &get_pvt_skip(ObEvalCtx &ctx) const
   {
+    if(extra_buf_.buf_flag_)
+      return *extra_buf_.skip_;
     return *to_bit_vector(ctx.frames_[frame_idx_] + pvt_skip_off_);
   }
 
@@ -709,6 +726,7 @@ public:
   ObExprBasicFuncs *basic_funcs_;
   uint64_t batch_idx_mask_;
   ObIExprExtraInfo *extra_info_;
+  predict_buf_ extra_buf_;
 };
 
 // helper template to access ObExpr::extra_

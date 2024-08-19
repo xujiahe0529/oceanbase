@@ -1724,6 +1724,13 @@ public:
   static int extract_shared_exprs(ObDMLStmt *parent,
                                   ObIArray<ObRawExpr *> &relation_exprs,
                                   ObIArray<ObRawExpr *> &common_exprs);
+
+  // for python udf
+  static int extract_python_udf_exprs(ObIArray<ObRawExpr *> &src_exprs,
+                                      ObIArray<ObRawExpr *> &dst_exprs);
+
+  static bool expr_contain_type(ObRawExpr *expr,
+                               ObExprOperatorType type);                        
 private:
   static int inner_get_lazy_left_join(ObDMLStmt *stmt,
                                       TableItem *table,

@@ -327,6 +327,9 @@ void ObSqlPlanItem::reset()
   remarks_len_ = 0;
   other_xml_ = NULL;
   other_xml_len_ = 0;
+  //for python udf metadata
+  pyudf_metadata_ = NULL;
+  pyudf_metadata_len_ = 0;
 }
 
 int64_t ObSqlPlanItem::get_extra_size() const
@@ -352,7 +355,8 @@ int64_t ObSqlPlanItem::get_extra_size() const
         special_predicates_len_ +
         qblock_name_len_ +
         remarks_len_ +
-        other_xml_len_;
+        other_xml_len_+
+        pyudf_metadata_len_;
 }
 
 ObSqlPlanItemRecord::ObSqlPlanItemRecord()

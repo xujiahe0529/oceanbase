@@ -376,6 +376,12 @@ class ObSubPlanScanOp;
 REGISTER_OPERATOR(ObLogSubPlanScan, PHY_SUBPLAN_SCAN, ObSubPlanScanSpec,
                   ObSubPlanScanOp, NOINPUT, VECTORIZED_OP);
 
+class ObLogPythonUDF;
+class ObPythonUDFSpec;
+class ObPythonUDFOp;
+REGISTER_OPERATOR(ObLogPythonUDF, PHY_PYTHON_UDF, ObPythonUDFSpec,
+                  ObPythonUDFOp, NOINPUT, VECTORIZED_OP);
+
 class ObLogUnpivot;
 class ObUnpivotSpec;
 class ObUnpivotOp;

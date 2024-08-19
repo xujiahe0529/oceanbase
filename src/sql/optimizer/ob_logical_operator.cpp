@@ -2134,7 +2134,8 @@ int ObLogicalOperator::check_is_table_scan(const ObLogicalOperator &op,
     } else if (LOG_MATERIAL == cur_op->get_type() ||
                LOG_JOIN_FILTER == cur_op->get_type() ||
                LOG_SORT == cur_op->get_type() ||
-               LOG_SUBPLAN_SCAN == cur_op->get_type()) {
+               LOG_SUBPLAN_SCAN == cur_op->get_type() ||
+               LOG_PYTHON_UDF == cur_op->get_type()) {
       cur_op = cur_op->get_child(first_child);
     } else {
       cur_op = NULL;
@@ -2982,7 +2983,8 @@ int ObLogicalOperator::project_pruning_pre()
     if (OB_SUCC(ret) && OB_FAIL(table_scan->index_back_check())) {
       LOG_WARN("failed to check index back", K(ret));
     } else { /* Do nothing */ }
-  } else if (LOG_SUBPLAN_SCAN == type_) {
+  } else if (LOG_SUBPLAN_SCAN == type_ || 
+             LOG_PYTHON_UDF == type_) {
     ObLogSubPlanScan *subplan_scan = static_cast<ObLogSubPlanScan*>(this);
     PPDeps deps;
     if (OB_FAIL(check_output_dependance(subplan_scan->get_access_exprs(), deps))) {

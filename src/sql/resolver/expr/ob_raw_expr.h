@@ -3463,7 +3463,7 @@ public:
   const share::schema::ObPythonUDFMeta &get_udf_meta() const { return udf_meta_; }
   virtual bool inner_same_as(const ObRawExpr &expr,
                              ObExprEqualCheckContext *check_context = NULL) const override;
-
+  virtual int get_name_internal(char *buf, const int64_t buf_len, int64_t &pos, ExplainType type) const override;
 private:
   //for python udf function info
   share::schema::ObPythonUDFMeta udf_meta_;

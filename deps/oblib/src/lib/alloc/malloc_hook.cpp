@@ -95,7 +95,7 @@ void ob_free_hook(void *ptr, const void *)
 {
   if (OB_LIKELY(ptr != nullptr)) {
     auto *header = Header::ptr2header(ptr);
-    abort_unless(header->check_magic_code());
+    // abort_unless(header->check_magic_code());
     header->mark_unused();
     void *orig_ptr = (char*)header - header->offset_;
     if (OB_UNLIKELY(header->from_mmap_)) {

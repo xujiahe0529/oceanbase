@@ -992,7 +992,6 @@ static ObExpr::EvalFunc g_expr_eval_functions[] = {
   NULL,                                                               /* 590 */
   NULL,                                                               /* 591 */
   ObExprNlsInitCap::calc_nls_initcap_expr,                             /* 592 */
-  ObExprPythonUdf::eval_python_udf,                                   /* python udf */
   ObExprPythonUdf::eval_test_udf                                      /* test meta data udf */
 };
 
@@ -1109,8 +1108,6 @@ static ObExpr::EvalBatchFunc g_expr_eval_batch_functions[] = {
   ObExprCoalesce::calc_batch_coalesce_expr,                           /* 109 */
   ObExprIsNot::calc_batch_is_not_null,                                /* 110 */
   ObExprNlsInitCap::calc_nls_initcap_batch,                            /* 111 */
-  ObExprPythonUdf::eval_python_udf_batch,                             /* python udf */
-  ObExprPythonUdf::eval_python_udf_batch_buffer,                       /* python udf buffer*/
   ObExprPythonUdf::eval_test_udf_batch                                /* test meta data udf batch */
 };
 

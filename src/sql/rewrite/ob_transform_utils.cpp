@@ -12275,5 +12275,43 @@ int ObTransformUtils::pack_stmt(ObTransformerCtx *ctx,
   return ret;
 }
 
+//for python udf
+int ObTransformUtils::extract_python_udf_exprs(
+    ObIArray<ObRawExpr *> &src_exprs,
+    ObIArray<ObRawExpr *> &dst_exprs) 
+{
+  int ret = OB_SUCCESS;
+  ObRawExpr *expr = NULL;
+  int32_t i = 0;
+  while (OB_SUCC(ret) && i < src_exprs.count()) {
+    expr = src_exprs.at(i);
+    if(expr_contain_type(expr, T_FUN_SYS_PYTHON_UDF)) {
+      dst_exprs.push_back(expr);
+      src_exprs.remove(i);
+    } else {
+      ++i;
+    }
+  }
+  return ret;
+}
+
+//simple recusive find python_udf
+bool ObTransformUtils::expr_contain_type(
+    ObRawExpr *expr,
+    ObExprOperatorType type)
+{
+  if(OB_ISNULL(expr)) {
+    return false;
+  } else if(expr->get_expr_type() == type) {
+    return true;
+  } else {
+    for(int32_t i = 0; i < expr->get_param_count(); i++) {
+      if(expr_contain_type(expr->get_param_expr(i), type))
+        return true;
+    }
+    return false;
+  }
+}
+
 } // namespace sql
 } // namespace oceanbase

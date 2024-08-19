@@ -21,6 +21,7 @@
 #include "ob_log_limit.h"
 #include "ob_log_subplan_scan.h"
 #include "ob_log_subplan_filter.h"
+#include "ob_log_python_udf.h"
 #include "ob_log_insert.h"
 #include "ob_log_update.h"
 #include "ob_log_delete.h"
@@ -140,6 +141,13 @@ ObLogicalOperator *ObLogOperatorFactory::allocate(ObLogPlan &plan, ObLogOpType t
     ptr = allocator_.alloc(sizeof(ObLogSubPlanFilter));
     if (NULL != ptr) {
       ret_op = new (ptr) ObLogSubPlanFilter(plan);
+    } else { /* do nothing */ }
+    break;
+  }
+  case LOG_PYTHON_UDF: {
+    ptr = allocator_.alloc(sizeof(ObLogPythonUDF));
+    if (NULL != ptr) {
+      ret_op = new (ptr) ObLogPythonUDF(plan);
     } else { /* do nothing */ }
     break;
   }

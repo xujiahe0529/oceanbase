@@ -35,6 +35,7 @@ namespace oceanbase
 namespace storage
 {
 
+/*
 // buffer for python_udf
 struct ObVectorBuffer
 {
@@ -58,7 +59,7 @@ public:
   int32_t end_; //record used size
   ObDatum *datums_;
   int64_t *row_ids_;
-};
+};*/
 
 class ObBlockRowStore;
 class ObMultipleMerge : public ObQueryRowIterator
@@ -182,7 +183,7 @@ private:
   ScanState scan_state_;
   // disallow copy
   DISALLOW_COPY_AND_ASSIGN(ObMultipleMerge);
-  ObVectorBuffer batch_buffer_;
+  //ObVectorBuffer batch_buffer_;
 };
 
 OB_INLINE int ObMultipleMerge::check_need_refresh_table(bool &need_refresh)

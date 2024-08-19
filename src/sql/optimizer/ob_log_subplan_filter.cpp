@@ -510,7 +510,8 @@ int ObLogSubPlanFilter::check_if_match_das_group_rescan(ObLogicalOperator *root,
         group_rescan = false;
       } else {/*do nothing*/}
     }
-  } else if (log_op_def::LOG_SUBPLAN_SCAN == root->get_type()) {
+  } else if (log_op_def::LOG_SUBPLAN_SCAN == root->get_type() || 
+             log_op_def::LOG_PYTHON_UDF == root->get_type()) {
     if (1 != root->get_num_of_child()) {
       group_rescan = false;
     } else if (OB_ISNULL(root->get_child(0))) {
@@ -567,7 +568,8 @@ int ObLogSubPlanFilter::check_and_set_das_group_rescan()
     } else if (get_initplan_idxs().has_member(i) || get_onetime_idxs().has_member(i)) {
       enable_das_group_rescan_ = false;
     } else if (!(child->get_type() == log_op_def::LOG_TABLE_SCAN
-                 || child->get_type() == log_op_def::LOG_SUBPLAN_SCAN)) {
+                 || child->get_type() == log_op_def::LOG_SUBPLAN_SCAN
+                 || child->get_type() == log_op_def::LOG_PYTHON_UDF)) {
       enable_das_group_rescan_ = false;
     } else if (OB_FAIL(check_if_match_das_group_rescan(child, enable_das_group_rescan_))) {
       LOG_WARN("failed to check match das batch rescan", K(ret));

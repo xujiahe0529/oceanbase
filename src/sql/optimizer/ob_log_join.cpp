@@ -596,7 +596,7 @@ const ObLogicalOperator *ObLogJoin::find_child_join(const ObLogicalOperator *op)
 
 bool ObLogJoin::is_scan_operator(log_op_def::ObLogOpType type)
 {
-  return LOG_TABLE_SCAN == type || LOG_SUBPLAN_SCAN == type ||
+  return LOG_TABLE_SCAN == type || LOG_SUBPLAN_SCAN == type || LOG_PYTHON_UDF == type ||
          LOG_FUNCTION_TABLE == type || LOG_UNPIVOT == type ||
          LOG_TEMP_TABLE_ACCESS == type || LOG_JSON_TABLE == type;
 }
@@ -1294,7 +1294,8 @@ int ObLogJoin::check_if_disable_batch(ObLogicalOperator* root)
         }
       }
     }
-  } else if (log_op_def::LOG_SUBPLAN_SCAN == root->get_type()) {
+  } else if (log_op_def::LOG_SUBPLAN_SCAN == root->get_type() || 
+             log_op_def::LOG_PYTHON_UDF == root->get_type() ) {
     if (OB_FAIL(SMART_CALL(check_if_disable_batch(root->get_child(0))))) {
       LOG_WARN("failed to check if disable batch", K(ret));
     }

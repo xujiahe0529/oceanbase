@@ -5368,6 +5368,41 @@ int ObLogPlan::allocate_subquery_path(SubQueryPath *subpath,
   return ret;
 }
 
+int ObLogPlan::allocate_pyudf_subquery_path(SubQueryPath *subpath,
+                                            ObLogicalOperator *&out_pyudf_subquery_path_op)
+{
+  int ret = OB_SUCCESS;
+  ObLogicalOperator *root = NULL;
+  ObLogPythonUDF *pyudf_op = NULL;
+  const TableItem *table_item = NULL;
+  if (OB_ISNULL(subpath) || OB_ISNULL(root = subpath->root_) || OB_ISNULL(get_stmt()) ||
+      OB_ISNULL(table_item = get_stmt()->get_table_item_by_id(subpath->subquery_id_))) {
+    ret = OB_ERR_UNEXPECTED;
+    LOG_WARN("get unexpected null", K(subpath), K(root), K(get_stmt()), K(table_item), K(ret));
+  } else if (OB_ISNULL(pyudf_op = static_cast<ObLogPythonUDF*>
+                      (get_log_op_factory().allocate(*this, LOG_PYTHON_UDF)))) {
+    ret = OB_ALLOCATE_MEMORY_FAILED;
+    LOG_ERROR("failed to allocate subquery operator", K(ret));
+  } else {
+    ObLogSubPlanScan *subplan_scan = static_cast<ObLogSubPlanScan*>(pyudf_op);
+    subplan_scan->set_subquery_id(subpath->subquery_id_);
+    subplan_scan->set_child(ObLogicalOperator::first_child, root);
+    subplan_scan->set_inherit_sharding_index(0);
+    subplan_scan->get_subquery_name().assign_ptr(table_item->table_name_.ptr(),
+                                                 table_item->table_name_.length());
+    if (OB_FAIL(append(subplan_scan->get_filter_exprs(), subpath->filter_))) {
+      LOG_WARN("failed to allocate_filter", K(ret));
+    } else if (OB_FAIL(append(subplan_scan->get_pushdown_filter_exprs(), subpath->pushdown_filters_))) {
+      LOG_WARN("failed to append pushdown filters", K(ret));
+    } else if (OB_FAIL(subplan_scan->compute_property(subpath))) {
+      LOG_WARN("failed to compute property", K(ret));
+    } else {
+      out_pyudf_subquery_path_op = pyudf_op;
+    }
+  }
+  return ret;
+}
+
 int ObLogPlan::allocate_material_as_top(ObLogicalOperator *&old_top)
 {
   int ret = OB_SUCCESS;
@@ -5432,7 +5467,27 @@ int ObLogPlan::create_plan_tree_from_path(Path *path,
       } else {/* do nothing */ }
     } else if (path->is_subquery_path()) {
       SubQueryPath *subquery_path = static_cast<SubQueryPath *>(path);
-      if (OB_FAIL(allocate_subquery_path(subquery_path, op))) {
+      bool contain_python_udf = false;
+      // find python udf in condition exprs
+      for (int i = 0; i < subquery_path->filter_.count(); ++i) {
+        if (ObTransformUtils::expr_contain_type(subquery_path->filter_.at(i), T_FUN_SYS_PYTHON_UDF))
+          contain_python_udf = true;
+      }
+      // pile
+      // find python udf in projection exprs
+      if (get_stmt()->is_select_stmt()) {
+        ObSEArray<ObRawExpr *, 4> select_exprs;
+        static_cast<const ObSelectStmt *>(get_stmt())->get_select_exprs(select_exprs);
+        for (int i = 0; i < select_exprs.count();++i) {
+          if (ObTransformUtils::expr_contain_type(select_exprs.at(i), T_FUN_SYS_PYTHON_UDF))
+            contain_python_udf = true;
+        }
+      }
+      if(contain_python_udf) {
+        if (OB_FAIL(allocate_pyudf_subquery_path(subquery_path, op))) {
+          LOG_WARN("failed to allocate subquery path with python udf", K(ret));
+        }
+      } else if (OB_FAIL(allocate_subquery_path(subquery_path, op))) {   //if前
         LOG_WARN("failed to allocate subquery path", K(ret));
       } else { /* Do nothing */ }
     } else {
@@ -11432,7 +11487,8 @@ int ObLogPlan::adjust_final_plan_info(ObLogicalOperator *&op)
         child->set_parent(op);
         op->set_child(i, child);
         if (op->get_type() == log_op_def::LOG_SET ||
-            op->get_type() == log_op_def::LOG_SUBPLAN_SCAN ||
+            op->get_type() == log_op_def::LOG_SUBPLAN_SCAN || 
+            op->get_type() == log_op_def::LOG_PYTHON_UDF || 
             op->get_type() == log_op_def::LOG_UNPIVOT ||
             (op->get_type() == log_op_def::LOG_SUBPLAN_FILTER && i > 0)) {
           child->mark_is_plan_root();
@@ -13353,7 +13409,8 @@ int ObLogPlan::find_possible_join_filter_tables(ObLogicalOperator *op,
       LOG_WARN("failed to push back info", K(ret));
       }
     }
-  } else if (op->get_type() == log_op_def::LOG_SUBPLAN_SCAN) {
+  } else if (op->get_type() == log_op_def::LOG_SUBPLAN_SCAN || 
+             op->get_type() == log_op_def::LOG_PYTHON_UDF) {
     ObLogPlan* child_plan;
     ObLogicalOperator* child_op;
     ObSEArray<ObRawExpr*, 4> pushdown_left_quals;

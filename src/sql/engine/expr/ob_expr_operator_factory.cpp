@@ -383,6 +383,7 @@
 #include "sql/engine/expr/ob_expr_icu_version.h"
 #include "sql/engine/expr/ob_expr_sql_mode_convert.h"
 #include "sql/engine/expr/ob_expr_python_udf.h"
+#include "sql/engine/expr/ob_expr_compress_model.h"
 
 using namespace oceanbase::common;
 namespace oceanbase
@@ -971,6 +972,7 @@ void ObExprOperatorFactory::register_expr_operators()
     REG_OP(ObExprDecode);
     REG_OP(ObExprICUVersion);
     REG_OP(ObExprPythonUdf);
+    REG_OP(ObExprCompressModel);
   }();
 // 注册oracle系统函数
   REG_OP_ORCL(ObExprSysConnectByPath);

@@ -125,7 +125,7 @@ ob_set_subtarget(ob_sql engine
   engine/user_defined_function/ob_user_defined_function.cpp
   engine/window_function/ob_window_function_op.cpp
   engine/opt_statistics/ob_optimizer_stats_gathering_op.cpp
-  engine/python_udf_engine/python_udf_engine.cpp
+  engine/python_udf_engine/ob_python_udf_op.cpp
 )
 
 ob_set_subtarget(ob_sql engine_aggregate
@@ -830,6 +830,7 @@ ob_set_subtarget(ob_sql optimizer
   optimizer/ob_log_sort.cpp
   optimizer/ob_log_subplan_filter.cpp
   optimizer/ob_log_subplan_scan.cpp
+  optimizer/ob_log_python_udf.cpp
   optimizer/ob_log_table_scan.cpp
   optimizer/ob_log_temp_table_access.cpp
   optimizer/ob_log_temp_table_insert.cpp

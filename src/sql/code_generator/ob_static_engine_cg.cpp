@@ -34,6 +34,7 @@
 #include "sql/optimizer/ob_log_set.h"
 #include "sql/optimizer/ob_log_subplan_filter.h"
 #include "sql/optimizer/ob_log_subplan_scan.h"
+#include "sql/optimizer/ob_log_python_udf.h"
 #include "sql/optimizer/ob_log_material.h"
 #include "sql/optimizer/ob_log_distinct.h"
 #include "sql/optimizer/ob_log_window_function.h"
@@ -93,6 +94,7 @@
 #include "sql/engine/sequence/ob_sequence_op.h"
 #include "sql/engine/subquery/ob_subplan_filter_op.h"
 #include "sql/engine/subquery/ob_subplan_scan_op.h"
+#include "sql/engine/python_udf_engine/ob_python_udf_op.h"
 #include "sql/engine/subquery/ob_unpivot_op.h"
 #include "sql/engine/expr/ob_expr_subquery_ref.h"
 #include "sql/engine/aggregate/ob_scalar_aggregate_op.h"
@@ -4923,6 +4925,21 @@ int ObStaticEngineCG::generate_spec(
   return ret;
 }
 
+int ObStaticEngineCG::generate_spec(
+    ObLogPythonUDF &op, ObPythonUDFSpec &spec, const bool in_root_job)
+{
+  int ret = OB_SUCCESS;
+  //generate subplan scan spec
+  OZ(generate_spec(static_cast<ObLogSubPlanScan&>(op), static_cast<ObSubPlanScanSpec&>(spec), in_root_job));
+  //extra predict buffer exprs
+  int input_size = op.get_access_exprs().count();
+  OZ(spec.col_exprs_.init(input_size));
+  for(int i = 1; i < spec.projector_.count(); i = i + 2) {
+    spec.col_exprs_.push_back(spec.projector_.at(i));
+  }
+  return ret;
+}
+
 int ObStaticEngineCG::generate_spec(ObLogErrLog &op,
                                     ObErrLogSpec &spec, const bool in_root_job)
 {
@@ -6841,6 +6858,10 @@ int ObStaticEngineCG::get_phy_op_type(ObLogicalOperator &log_op,
     }
     case log_op_def::LOG_SUBPLAN_SCAN: {
       type = PHY_SUBPLAN_SCAN;
+      break;
+    }
+    case log_op_def::LOG_PYTHON_UDF: {
+      type = PHY_PYTHON_UDF;
       break;
     }
     case log_op_def::LOG_MATERIAL: {

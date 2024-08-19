@@ -65,8 +65,8 @@ ObMultipleMerge::ObMultipleMerge()
       block_row_store_(nullptr),
       out_project_cols_(),
       lob_reader_(),
-      scan_state_(ScanState::NONE),
-      batch_buffer_()
+      scan_state_(ScanState::NONE)
+      //batch_buffer_()
 {
 }
 
@@ -1455,6 +1455,7 @@ void ObMultipleMerge::dump_table_statistic_for_4377()
   LOG_ERROR("==================== End table info ====================");
 }
 
+/*
 // buffer for python_udf
 int ObVectorBuffer::init(const sql::ObExprPtrIArray *exprs, common::ObIAllocator *alloc, int32_t batch_size)
 {
@@ -1463,11 +1464,11 @@ int ObVectorBuffer::init(const sql::ObExprPtrIArray *exprs, common::ObIAllocator
     ret = OB_INVALID_ARGUMENT;
     LOG_WARN("invalid argument", K(ret), KP(alloc), KP(exprs));
   } else {
-    /*
-    if(datums_ != NULL) 
-      alloc_->free(datums_);
-    if(row_ids_ != NULL) 
-      alloc_->free(row_ids_);*/
+    
+    //if(datums_ != NULL) 
+      //alloc_->free(datums_);
+    //if(row_ids_ != NULL) 
+      //alloc_->free(row_ids_);
 
     ObDatum *buf = (ObDatum *)alloc->alloc(sizeof(ObDatum) * batch_size * exprs->count() * 2); // 2倍batch size防止溢出
 
@@ -1554,5 +1555,6 @@ void ObVectorBuffer::move(int64_t col_cnt) //move to beginning
   end_ -= start_;
   start_ = 0;
 }
+*/
 }
 }
